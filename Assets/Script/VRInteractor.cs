@@ -8,11 +8,24 @@ public class VRInteractor : MonoBehaviour
     public Transform rayOrigin; // asigna aquí la mano derecha o el controlador derecho
     public float raycastDistance = 3f;
     public LayerMask interactableLayerMask;
+    private LineRenderer lineRenderer;
 
     [Header("Debug")]
     public bool showDebugRay = true;
 
     private IInteractable currentInteractable;
+    void Start()
+    {
+        lineRenderer = GetComponent<LineRenderer>();
+        if (lineRenderer == null)
+            lineRenderer = gameObject.AddComponent<LineRenderer>();
+
+        lineRenderer.startWidth = 0.005f;
+        lineRenderer.endWidth = 0.002f;
+        lineRenderer.positionCount = 2;
+        lineRenderer.material = new Material(Shader.Find("Unlit/Color"));
+        lineRenderer.material.color = Color.yellow;
+    }
 
     void Update()
     {
@@ -27,13 +40,17 @@ public class VRInteractor : MonoBehaviour
 
     void DetectInteractable()
     {
-        Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
+        Ray ray = new Ray(rayOrigin.position, rayOrigin.transform.forward);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, raycastDistance, interactableLayerMask))
         {
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+            lineRenderer.SetPosition(0, ray.origin);
+            lineRenderer.SetPosition(1, hit.point);
+            lineRenderer.startColor = Color.green;
+            lineRenderer.endColor = Color.green;
 
+            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
             if (interactable != null)
             {
                 if (currentInteractable != interactable)
@@ -42,22 +59,19 @@ public class VRInteractor : MonoBehaviour
                     currentInteractable = interactable;
                     currentInteractable.OnSelect();
                 }
-
-                if (showDebugRay)
-                    Debug.DrawRay(ray.origin, ray.direction * hit.distance, Color.green);
             }
             else
             {
                 ClearCurrentInteractable();
-                if (showDebugRay)
-                    Debug.DrawRay(ray.origin, ray.direction * hit.distance, Color.yellow);
             }
         }
         else
         {
+            lineRenderer.SetPosition(0, ray.origin);
+            lineRenderer.SetPosition(1, ray.origin + ray.direction * raycastDistance);
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
             ClearCurrentInteractable();
-            if (showDebugRay)
-                Debug.DrawRay(ray.origin, ray.direction * raycastDistance, Color.red);
         }
     }
 

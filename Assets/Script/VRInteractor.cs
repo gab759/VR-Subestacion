@@ -1,27 +1,50 @@
 using UnityEngine;
-using Meta.XR; // solo si estás usando el namespace de Meta SDK
-// Si no te lo detecta, omítelo
+using Meta.XR;
 
 public class VRInteractor : MonoBehaviour
 {
     [Header("Raycast Settings")]
-    public Transform rayOrigin; // asigna aquí la mano derecha o el controlador derecho
+    public Transform rayOrigin;
     public float raycastDistance = 3f;
     public LayerMask interactableLayerMask;
+    private LineRenderer lineRenderer;
+
+    [Header("Checklist")]
+    public CheckList checklistManager;
 
     [Header("Debug")]
     public bool showDebugRay = true;
 
     private IInteractable currentInteractable;
+    
+    void Start()
+    {
+        lineRenderer = GetComponent<LineRenderer>();
+        if (lineRenderer == null)
+            lineRenderer = gameObject.AddComponent<LineRenderer>();
+
+        lineRenderer.startWidth = 0.005f;
+        lineRenderer.endWidth = 0.002f;
+        lineRenderer.positionCount = 2;
+        lineRenderer.material = new Material(Shader.Find("Unlit/Color"));
+        lineRenderer.material.color = Color.yellow;
+    }
 
     void Update()
     {
         DetectInteractable();
 
-        // Verifica si se presionó el botón B del mando derecho
-        if (OVRInput.GetDown(OVRInput.Button.Two)) // B en mando derecho
+        // BotÃ³n B para interactuar
+        if (OVRInput.GetDown(OVRInput.Button.Two))
         {
             TryInteract();
+        }
+
+        // BotÃ³n A para mostrar/ocultar checklist
+        if (OVRInput.GetDown(OVRInput.Button.One))
+        {
+            if (checklistManager != null)
+                checklistManager.ToggleChecklist();
         }
     }
 
@@ -32,6 +55,11 @@ public class VRInteractor : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, raycastDistance, interactableLayerMask))
         {
+            lineRenderer.SetPosition(0, ray.origin);
+            lineRenderer.SetPosition(1, hit.point);
+            lineRenderer.startColor = Color.green;
+            lineRenderer.endColor = Color.green;
+
             IInteractable interactable = hit.collider.GetComponent<IInteractable>();
 
             if (interactable != null)
@@ -55,7 +83,12 @@ public class VRInteractor : MonoBehaviour
         }
         else
         {
+            lineRenderer.SetPosition(0, ray.origin);
+            lineRenderer.SetPosition(1, ray.origin + ray.direction * raycastDistance);
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
             ClearCurrentInteractable();
+            
             if (showDebugRay)
                 Debug.DrawRay(ray.origin, ray.direction * raycastDistance, Color.red);
         }

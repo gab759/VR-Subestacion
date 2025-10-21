@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb80c5785ec7c6046929e2be0b661cb4, type: 3}
-  m_Name: ZapatosCompletedEvent
+  m_Script: {fileID: 11500000, guid: 6a6406394310d534a9e0105e462bc570, type: 3}
+  m_Name: OnItemCompleted
   m_EditorClassIdentifier: 

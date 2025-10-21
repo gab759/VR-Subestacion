@@ -9,6 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb80c5785ec7c6046929e2be0b661cb4, type: 3}
-  m_Name: GuantesCompletedEvent
+  m_Script: {fileID: 11500000, guid: efa1458c2bc55e04b872c61942be2866, type: 3}
+  m_Name: OVROverlayCanvasSettings
   m_EditorClassIdentifier: 
+  _transparentImposterShader: {fileID: 0}
+  _opaqueImposterShader: {fileID: 0}
+  MaxSimultaneousCanvases: 1
+  CanvasRenderLayer: 31
+  CanvasLayer: -1

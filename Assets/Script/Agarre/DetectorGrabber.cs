@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-public class DetectorBGrabber : MonoBehaviour, IInteractable
+public class DetectorGrabber : MonoBehaviour, IInteractable
 {
     [Header("Refs")]
     [Tooltip("Transform del controlador/mano DERECHA (tu rayOrigin del mando derecho)")]
@@ -19,7 +19,7 @@ public class DetectorBGrabber : MonoBehaviour, IInteractable
     public Color highlightColor = Color.yellow;
 
     // Estado global simple (una mano derecha)
-    public static DetectorBGrabber CurrentRightHandHeld { get; private set; }
+    public static DetectorGrabber CurrentRightHandHeld { get; private set; }
 
     // Internos
     private bool isFollowing = false;
@@ -117,7 +117,7 @@ public class DetectorBGrabber : MonoBehaviour, IInteractable
             rbHadUseGravity = rb.useGravity;
             rb.isKinematic = true;
             rb.useGravity = false;
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 

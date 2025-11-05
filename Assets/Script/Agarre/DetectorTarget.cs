@@ -33,17 +33,17 @@ public class DetectorTarget : MonoBehaviour, IInteractable
     // ============ IInteractable ============
     public void OnSelect()
     {
-        SetHighlight(true);
+        SetHighlight(true);  
     }
 
     public void OnDeselect()
     {
         SetHighlight(false);
     }
-
+        
     public void Interact()
     {
-        var held = DetectorBGrabber.CurrentRightHandHeld;
+        var held = DetectorGrabber.CurrentRightHandHeld;
         if (held != null)
         {
             held.PlaceOn(placementPoint);

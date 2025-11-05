@@ -43,14 +43,17 @@ public class VRInteractor : MonoBehaviour
         Ray ray = new Ray(rayOrigin.position, rayOrigin.transform.forward);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, raycastDistance, interactableLayerMask))
+        // NUEVO: incluir triggers explícitamente
+        if (Physics.Raycast(ray, out hit, raycastDistance, interactableLayerMask, QueryTriggerInteraction.Collide))
         {
             lineRenderer.SetPosition(0, ray.origin);
             lineRenderer.SetPosition(1, hit.point);
             lineRenderer.startColor = Color.green;
             lineRenderer.endColor = Color.green;
 
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+            // NUEVO: buscar en el padre también (si el script está arriba y el collider en un hijo)
+            IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+
             if (interactable != null)
             {
                 if (currentInteractable != interactable)

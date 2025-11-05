@@ -10,17 +10,18 @@ public class ChecklistItem
     public string itemName;
     public int orderIndex;
     public bool isCompleted = false;
-    public GameObject itemUI;
-    public Image checkmarkImage;
-    public TextMeshProUGUI itemText;
+    [HideInInspector] public GameObject itemUI;
+    [HideInInspector] public Image checkmarkImage;
+    [HideInInspector] public TextMeshProUGUI itemText;
 }
 
 public class CheckList : MonoBehaviour
 {
     [Header("Checklist Items")]
     [SerializeField] private List<ChecklistItem> checklistItems = new List<ChecklistItem>();
-    
+
     [Header("UI References")]
+    [SerializeField] private Canvas canvas;
     [SerializeField] private GameObject checklistPanel;
     [SerializeField] private GameObject itemPrefab;
     [SerializeField] private Transform itemContainer;
@@ -28,10 +29,11 @@ public class CheckList : MonoBehaviour
     [Header("VR Settings")]
     [SerializeField] private bool isVRMode = true;
     [SerializeField] private Transform vrCamera;
-    [SerializeField] private Vector3 vrOffset = new Vector3(0.3f, 0, 0.5f);
+    [SerializeField] private Vector3 vrOffset = new Vector3(0.5f, 0, 0.8f);
     [SerializeField] private bool followPlayer = true;
     [SerializeField] private float followSpeed = 5f;
     [SerializeField] private bool alwaysVisible = true;
+    [SerializeField] private float canvasScale = 0.001f;
     
     [Header("Colors")]
     [SerializeField] private Color completedColor = Color.green;
@@ -49,7 +51,6 @@ public class CheckList : MonoBehaviour
     
     private int currentItemIndex = 0;
     private bool isChecklistComplete = false;
-    private Canvas canvas;
 
     void Start()
     {
@@ -60,6 +61,12 @@ public class CheckList : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && (completeSound != null || checklistCompleteSound != null))
             audioSource = gameObject.AddComponent<AudioSource>();
+
+        Debug.Log($"Canvas encontrado: {canvas != null}");
+        Debug.Log($"Canvas RenderMode: {canvas?.renderMode}");
+        Debug.Log($"VR Camera: {vrCamera?.name}");
+        Debug.Log($"ChecklistPanel activo: {checklistPanel?.activeSelf}");
+        Debug.Log($"Items en checklist: {checklistItems.Count}");
     }
 
     void Update()
@@ -72,19 +79,22 @@ public class CheckList : MonoBehaviour
 
     private void InitializeVRCanvas()
     {
-        canvas = GetComponentInChildren<Canvas>();
+        // Buscar el canvas si no está asignado
+        if (canvas == null)
+            canvas = GetComponentInChildren<Canvas>();
+            
         if (canvas == null)
         {
-            Debug.LogWarning("No se encontró Canvas. Asegúrate de tener un Canvas en el checklist.");
+            Debug.LogError("No se encontró Canvas. Asegúrate de tener un Canvas como hijo de ChecklistManager y asignarlo en el Inspector.");
             return;
         }
 
         if (isVRMode)
         {
+            // Configurar Canvas para VR
             canvas.renderMode = RenderMode.WorldSpace;
-            canvas.worldCamera = vrCamera != null ? vrCamera.GetComponent<Camera>() : Camera.main;
-            transform.localScale = Vector3.one * 0.001f;
             
+            // Buscar VR Camera si no está asignada
             if (vrCamera == null)
             {
                 GameObject cameraRig = GameObject.Find("OVRCameraRig");
@@ -96,7 +106,26 @@ public class CheckList : MonoBehaviour
                 }
                 
                 if (vrCamera == null)
-                    vrCamera = Camera.main.transform;
+                    vrCamera = Camera.main?.transform;
+            }
+            
+            // Asignar cámara al Canvas
+            canvas.worldCamera = vrCamera != null ? vrCamera.GetComponent<Camera>() : Camera.main;
+            
+            // Configurar el tamaño del Canvas
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            if (canvasRect != null)
+            {
+                canvasRect.sizeDelta = new Vector2(1000, 1500);
+            }
+            
+            // Escalar el Canvas para VR
+            canvas.transform.localScale = Vector3.one * canvasScale;
+            
+            // Posicionar inicialmente
+            if (vrCamera != null)
+            {
+                UpdateVRPosition();
             }
         }
         else
@@ -104,23 +133,30 @@ public class CheckList : MonoBehaviour
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         }
 
+        // Mostrar u ocultar panel según configuración
         if (checklistPanel != null)
             checklistPanel.SetActive(alwaysVisible);
     }
 
     private void UpdateVRPosition()
     {
+        if (vrCamera == null) return;
+        
         if (followPlayer)
         {
+            // Calcular posición frente al jugador
             Vector3 targetPosition = vrCamera.position + 
                                      vrCamera.right * vrOffset.x + 
                                      vrCamera.up * vrOffset.y + 
                                      vrCamera.forward * vrOffset.z;
             
+            // Mover suavemente hacia la posición objetivo
             transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * followSpeed);
             
+            // Rotar para mirar al jugador
             Vector3 directionToCamera = vrCamera.position - transform.position;
-            directionToCamera.y = 0;
+            directionToCamera.y = 0; // Mantener horizontal
+            
             if (directionToCamera != Vector3.zero)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(-directionToCamera);
@@ -131,34 +167,70 @@ public class CheckList : MonoBehaviour
 
     private void InitializeChecklist()
     {
+        // Ordenar items por índice
         checklistItems.Sort((a, b) => a.orderIndex.CompareTo(b.orderIndex));
         
-        if (itemContainer != null && itemPrefab != null)
+        if (itemContainer == null || itemPrefab == null)
         {
-            foreach (var item in checklistItems)
+            Debug.LogError("ItemContainer o ItemPrefab no están asignados en el Inspector.");
+            return;
+        }
+
+        // Limpiar items existentes en el container
+        foreach (Transform child in itemContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // Crear UI para cada item
+        foreach (var item in checklistItems)
+        {
+            GameObject itemObj = Instantiate(itemPrefab, itemContainer);
+            item.itemUI = itemObj;
+            
+            // Buscar componentes del item
+            item.checkmarkImage = itemObj.transform.Find("Checkmark")?.GetComponent<Image>();
+            item.itemText = itemObj.GetComponentInChildren<TextMeshProUGUI>();
+            
+            // Si no encuentra con Find, buscar en hijos directos
+            if (item.itemText == null)
             {
-                if (item.itemUI == null)
-                {
-                    GameObject itemObj = Instantiate(itemPrefab, itemContainer);
-                    item.itemUI = itemObj;
-                    item.checkmarkImage = itemObj.transform.Find("Checkmark")?.GetComponent<Image>();
-                    item.itemText = itemObj.transform.Find("Text")?.GetComponent<TextMeshProUGUI>();
-                    
-                    if (item.itemText != null)
-                    {
-                        item.itemText.text = item.itemName;
-                        if (isVRMode)
-                            item.itemText.fontSize = 48;
-                    }
-                }
+                TextMeshProUGUI[] texts = itemObj.GetComponentsInChildren<TextMeshProUGUI>();
+                if (texts.Length > 0)
+                    item.itemText = texts[0];
+            }
+            
+            if (item.itemText != null)
+            {
+                item.itemText.text = item.itemName;
+                if (isVRMode)
+                    item.itemText.fontSize = 36;
+            }
+            else
+            {
+                Debug.LogWarning($"No se encontró TextMeshProUGUI en el item: {item.itemName}");
+            }
+            
+            if (item.checkmarkImage != null)
+            {
+                item.checkmarkImage.enabled = false;
+            }
+            else
+            {
+                Debug.LogWarning($"No se encontró Checkmark Image en el item: {item.itemName}");
             }
         }
+        
+        Debug.Log($"Checklist inicializada con {checklistItems.Count} items");
     }
 
     public void CompleteItem(string itemName)
     {
         if (isChecklistComplete || currentItemIndex >= checklistItems.Count)
+        {
+            Debug.LogWarning("Checklist ya completada o índice fuera de rango");
             return;
+        }
 
         ChecklistItem currentItem = checklistItems[currentItemIndex];
         
@@ -182,7 +254,7 @@ public class CheckList : MonoBehaviour
                 if (audioSource != null && checklistCompleteSound != null)
                     audioSource.PlayOneShot(checklistCompleteSound);
                 
-                Debug.Log("¡Checklist completada!");
+                Debug.Log("🎉 ¡Checklist completada!");
             }
             
             UpdateUI();
@@ -250,7 +322,11 @@ public class CheckList : MonoBehaviour
     public void ToggleChecklist()
     {
         if (checklistPanel != null)
-            checklistPanel.SetActive(!checklistPanel.activeSelf);
+        {
+            bool newState = !checklistPanel.activeSelf;
+            checklistPanel.SetActive(newState);
+            Debug.Log($"Checklist {(newState ? "mostrado" : "ocultado")}");
+        }
     }
 
     public void ShowChecklist(bool show)
@@ -295,5 +371,34 @@ public class CheckList : MonoBehaviour
     public void OnVRButtonPressed()
     {
         ToggleChecklist();
+    }
+
+    // Método para agregar items desde el Inspector o código
+    public void AddChecklistItem(string itemName, int orderIndex)
+    {
+        ChecklistItem newItem = new ChecklistItem
+        {
+            itemName = itemName,
+            orderIndex = orderIndex,
+            isCompleted = false
+        };
+        checklistItems.Add(newItem);
+    }
+
+    // Para debug en el editor
+    void OnDrawGizmos()
+    {
+        if (vrCamera != null && isVRMode)
+        {
+            // Dibujar línea desde la cámara hasta donde debería estar el checklist
+            Vector3 targetPos = vrCamera.position + 
+                               vrCamera.right * vrOffset.x + 
+                               vrCamera.up * vrOffset.y + 
+                               vrCamera.forward * vrOffset.z;
+            
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(vrCamera.position, targetPos);
+            Gizmos.DrawWireSphere(targetPos, 0.1f);
+        }
     }
 }

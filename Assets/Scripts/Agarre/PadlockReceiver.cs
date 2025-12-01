@@ -1,171 +1,104 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 public class PadlockReceiver : MonoBehaviour, IInteractable
 {
-    [Header("Pose de colocación")]
-    [Tooltip("Dónde se posicionará el candado. Si lo dejas vacío, usará este transform.")]
-    public Transform snapPoint;
+    [Header("Punto donde colocar el candado")]
+    [SerializeField] private Transform snapPoint;
 
-    [Header("Candado a aceptar")]
-    [Tooltip("Candado específico (opcional). Si no se asigna, tomará el que esté dentro del trigger o el más cercano.")]
-    public PadlockGrabber padlockRef;
+    [Header("Candado a aceptar (opcional)")]
+    [Tooltip("Si lo asignas, este será el candado que se colocará. Si lo dejas vacío, usará el que esté dentro del trigger.")]
+    [SerializeField] private PadlockGrabber padlockRef;
 
-    [Tooltip("Radio de búsqueda si no hay referencia ni trigger activo (opcional)")]
-    public float searchRadius = 0.5f;
+    [Header("Checklist / Procedimiento")]
+    [SerializeField] private SubstationProcedureManager procedureManager;
+    [SerializeField] private CheckList checklist;
+    [SerializeField] private string checklistStepName = "ColocarCandado";
 
-    [Header("Visual del receptor")]
-    [Tooltip("Raíz visual a pintar (opcional). Si no se asigna, pinta los renderers de este objeto).")]
-    public Transform visualRoot;
+    // Candado detectado dentro del trigger
+    private PadlockGrabber padlockInTrigger;
 
-    public Color highlightColor = Color.yellow;
-
-    [Header("Comportamiento al encajar")]
-    [Tooltip("Desactiva el script PadlockGrabber del candado al encajar (recomendado).")]
-    public bool disablePadlockScriptOnSnap = true;
-
-    [Tooltip("Desparenta el candado al encajar (por si estaba parentado a la mano).")]
-    public bool unparentOnSnap = true;
-
-    [Tooltip("Alinear escala del candado con el snapPoint")]
-    public bool matchScale = false;
-
-    // Internos visual
-    private Renderer[] renderers;
-    private Color[] originalColors;
-    private bool isHighlighted;
-
-    // Candidato detectado por trigger
-    private PadlockGrabber lastPadlockInTrigger;
-
-    void Awake()
+    private void Awake()
     {
-        if (snapPoint == null) snapPoint = transform;
-
-        Transform vis = visualRoot != null ? visualRoot : transform;
-        renderers = vis.GetComponentsInChildren<Renderer>(true);
-
-        var cols = new List<Color>(renderers.Length);
-        foreach (var r in renderers) cols.Add(GetColor(r));
-        originalColors = cols.ToArray();
+        if (snapPoint == null)
+            snapPoint = transform;
     }
 
     // ---------- IInteractable ----------
-    public void OnSelect() { SetHighlight(true); }
-    public void OnDeselect() { SetHighlight(false); }
+    public void OnSelect()
+    {
+        // Aquí puedes poner highlight si quieres
+    }
+
+    public void OnDeselect()
+    {
+        // Quitar highlight si lo usas
+    }
 
     public void Interact()
     {
-        // B sobre el receptor → encajar
-        PadlockGrabber padlock = ResolvePadlockCandidate();
-        if (padlock == null)
+        // Se llama cuando apuntas al slot y pulsas B
+
+        // 1) Verificar que estemos en el paso correcto del checklist
+        if (checklist != null && !string.IsNullOrEmpty(checklistStepName))
         {
-            Debug.Log("[PadlockReceiver] No encontré candado (asigna padlockRef o pon el candado dentro del trigger).");
+            string current = checklist.GetCurrentItemName();
+            if (current != checklistStepName)
+            {
+                Debug.Log($"[PadlockReceiver] Paso actual '{current}' no es '{checklistStepName}'.");
+                return;
+            }
+        }
+
+        // 2) Elegir el candado candidato:
+        //    prioridad: padlockRef (si está asignado) → si no, el que esté en el trigger
+        PadlockGrabber candidate = null;
+
+        if (padlockRef != null)
+            candidate = padlockRef;
+        else
+            candidate = padlockInTrigger;
+
+        if (candidate == null)
+        {
+            Debug.Log("[PadlockReceiver] No hay candado asignado ni dentro del trigger.");
             return;
         }
 
-        SnapPadlock(padlock);
+        // 3) Debe estar en la mano y no ya bloqueado
+        if (!candidate.IsHeld || candidate.IsLockedInPlace)
+        {
+            Debug.Log("[PadlockReceiver] El candado no está en la mano o ya está colocado.");
+            return;
+        }
+
+        // 4) Encajamos el candado en el punto
+        candidate.LockInPlace(snapPoint);
+
+        // 5) Marcamos el paso en el procedimiento
+        if (procedureManager != null)
+            procedureManager.OnCandadoColocado();
+
+        Debug.Log("[PadlockReceiver] Candado colocado correctamente.");
+
+        // Ya no necesitamos la referencia del trigger
+        if (candidate == padlockInTrigger)
+            padlockInTrigger = null;
     }
     // -----------------------------------
 
-    private PadlockGrabber ResolvePadlockCandidate()
+    // ---------- Trigger para saber qué candado está cerca ----------
+    private void OnTriggerEnter(Collider other)
     {
-        if (padlockRef != null) return padlockRef;
-        if (lastPadlockInTrigger != null) return lastPadlockInTrigger;
-
-        // Fallback: buscar por proximidad un PadlockGrabber
-        Collider[] cols = Physics.OverlapSphere(snapPoint.position, searchRadius, ~0, QueryTriggerInteraction.Collide);
-        float best = float.MaxValue;
-        PadlockGrabber bestPadlock = null;
-
-        foreach (var c in cols)
-        {
-            var p = c.GetComponentInParent<PadlockGrabber>();
-            if (p != null)
-            {
-                float d = (p.transform.position - snapPoint.position).sqrMagnitude;
-                if (d < best) { best = d; bestPadlock = p; }
-            }
-        }
-        return bestPadlock;
+        var padlock = other.GetComponentInParent<PadlockGrabber>();
+        if (padlock != null)
+            padlockInTrigger = padlock;
     }
 
-    private void SnapPadlock(PadlockGrabber padlock)
+    private void OnTriggerExit(Collider other)
     {
-        Transform t = padlock.transform;
+        if (padlockInTrigger == null) return;
 
-        if (unparentOnSnap) t.SetParent(null, true);
-
-        t.position = snapPoint.position;
-        t.rotation = snapPoint.rotation;
-        if (matchScale) t.localScale = snapPoint.lossyScale;
-
-        if (disablePadlockScriptOnSnap)
-            padlock.enabled = false;
-
-        // quitar highlight del receptor
-        SetHighlight(false, true);
+        if (other.transform.IsChildOf(padlockInTrigger.transform))
+            padlockInTrigger = null;
     }
-
-    // ---------- Trigger para detectar el candado ----------
-    void OnTriggerEnter(Collider other)
-    {
-        var p = other.GetComponentInParent<PadlockGrabber>();
-        if (p != null) lastPadlockInTrigger = p;
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (lastPadlockInTrigger == null) return;
-        if (other.transform.IsChildOf(lastPadlockInTrigger.transform))
-            lastPadlockInTrigger = null;
-    }
-    // ------------------------------------------------------
-
-    // ---------- Helpers de highlight (URP/Standard) ----------
-    private void SetHighlight(bool on, bool forceOriginal = false)
-    {
-        if (renderers == null) return;
-
-        if (forceOriginal)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], originalColors[i]);
-            isHighlighted = false; return;
-        }
-
-        if (on && !isHighlighted)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], highlightColor);
-            isHighlighted = true;
-        }
-        else if (!on && isHighlighted)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], originalColors[i]);
-            isHighlighted = false;
-        }
-    }
-
-    private static Color GetColor(Renderer r)
-    {
-        var m = r.material;
-        if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
-        if (m.HasProperty("_Color")) return m.GetColor("_Color");
-        return Color.white;
-    }
-    private static void SetColor(Renderer r, Color c)
-    {
-        var m = r.material;
-        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
-        else if (m.HasProperty("_Color")) m.SetColor("_Color", c);
-    }
-
-#if UNITY_EDITOR
-    void OnDrawGizmosSelected()
-    {
-        Transform sp = snapPoint != null ? snapPoint : transform;
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(sp.position, Vector3.one * 0.05f);
-        Gizmos.DrawLine(sp.position, sp.position + sp.forward * 0.1f);
-    }
-#endif
 }

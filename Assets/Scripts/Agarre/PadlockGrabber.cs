@@ -1,193 +1,156 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class PadlockGrabber : MonoBehaviour, IInteractable   // ← IMPORTANTE
+public class PadlockGrabber : MonoBehaviour, IInteractable
 {
-    [Header("Refs")]
-    [Tooltip("Transform del controlador/mano derecha (puedes usar tu rayOrigin)")]
-    public Transform rightHandAnchor;
+    [Header("Referencia de la mano")]
+    [Tooltip("Transform de la mano donde se sujetará el candado (ej: RightHandAnchor).")]
+    [SerializeField] private Transform handAnchor;
 
-    [Tooltip("Punto donde se coloca el candado (pose final)")]
-    public Transform placementPoint;
+    [Header("Checklist (opcional para bloquear el pickup)")]
+    [SerializeField] private CheckList checklist;
+    [Tooltip("Pasos en los que se permite AGARRAR este candado (ej: solo 'ColocarCandado').")]
+    [SerializeField] private string[] allowedSteps;
 
-    [Tooltip("Capa del collider (trigger) del placementPoint para el raycast")]
-    public LayerMask placementLayer = ~0;
+    [Header("Visual")]
+    [SerializeField] private Color highlightColor = Color.yellow;
 
-    [Header("Follow (no parent)")]
-    [Tooltip("Offset local de posición respecto a la mano")]
-    public Vector3 localPositionOffset = Vector3.zero;
+    private Transform originalParent;
+    private Vector3 originalLocalPos;
+    private Quaternion originalLocalRot;
 
-    [Tooltip("Offset local de rotación (Euler) respecto a la mano")]
-    public Vector3 localEulerOffset = Vector3.zero;
+    private Renderer rend;
+    private Color originalColor;
 
-    [Tooltip("Suavizado de seguimiento (0 = sin suavizado)")]
-    [Range(0f, 40f)]
-    public float followSmoothing = 20f;
+    private Rigidbody rb;
+    private Collider col;
 
-    [Header("Colocación")]
-    [Tooltip("Distancia máxima para considerar 'cerca' del punto y permitir encajar")]
-    public float snapDistance = 0.12f;
+    private bool isHeld = false;
+    private bool isLockedInPlace = false;
 
-    [Header("Highlight")]
-    public Color highlightColor = Color.yellow;
+    public bool IsHeld => isHeld;
+    public bool IsLockedInPlace => isLockedInPlace;
 
-    // Internos
-    private Renderer[] renderers;
-    private Color[] originalColors;
-    private bool isFollowing = false;   // en vez de isGrabbed/parent
-    private bool isHighlighted = false;
-    private Transform _tr;
-
-    void Awake()
+    private void Awake()
     {
-        _tr = transform;
+        originalParent = transform.parent;
+        originalLocalPos = transform.localPosition;
+        originalLocalRot = transform.localRotation;
 
-        // Cache renderers + colores (soporta URP/Standard)
-        renderers = GetComponentsInChildren<Renderer>(true);
-        var cols = new List<Color>(renderers.Length);
-        foreach (var r in renderers) cols.Add(GetColor(r));
-        originalColors = cols.ToArray();
-    }
+        rend = GetComponentInChildren<Renderer>();
+        if (rend != null)
+            originalColor = rend.material.color;
 
-    void LateUpdate()
-    {
-        if (!isFollowing || rightHandAnchor == null) return;
-
-        // Objetivo de seguimiento (sin parent)
-        Vector3 targetPos = rightHandAnchor.TransformPoint(localPositionOffset);
-        Quaternion targetRot = rightHandAnchor.rotation * Quaternion.Euler(localEulerOffset);
-
-        if (followSmoothing > 0f)
-        {
-            float k = 1f - Mathf.Exp(-followSmoothing * Time.deltaTime);
-            _tr.position = Vector3.Lerp(_tr.position, targetPos, k);
-            _tr.rotation = Quaternion.Slerp(_tr.rotation, targetRot, k);
-        }
-        else
-        {
-            _tr.position = targetPos;
-            _tr.rotation = targetRot;
-        }
-    }
-
-    // ===== IInteractable =====
-    public void OnSelect()
-    {
-        if (isFollowing) return; // ya en mano → no resaltar
-        SetHighlight(true);
-    }
-
-    public void OnDeselect()
-    {
-        if (isFollowing) return;
-        SetHighlight(false);
+        rb = GetComponent<Rigidbody>();
+        col = GetComponent<Collider>();
     }
 
     public void Interact()
     {
-        if (!isFollowing)
+        // Si ya está encajado en el receptor, no se puede volver a manipular
+        if (isLockedInPlace)
+            return;
+
+        // Bloqueo por checklist (opcional)
+        if (checklist != null && allowedSteps != null && allowedSteps.Length > 0)
         {
-            StartFollowingHand();   // empezar a seguir mano
+            string current = checklist.GetCurrentItemName();
+            bool allowed = false;
+
+            foreach (var step in allowedSteps)
+            {
+                if (!string.IsNullOrEmpty(step) && current == step)
+                {
+                    allowed = true;
+                    break;
+                }
+            }
+
+            if (!allowed)
+                return;
+        }
+
+        if (!isHeld)
+        {
+            PickUp();
+        }
+        else
+        {
+            DropToOriginal();
+        }
+    }
+
+    private void PickUp()
+    {
+        if (handAnchor == null)
+        {
+            Debug.LogWarning("[PadlockGrabber] No se asignó handAnchor.");
             return;
         }
 
-        // Si ya sigue, intenta colocar si apunto al placement o estoy cerca
-        if (CanPlaceNow())
-            PlaceOnPoint();
-    }
-    // =========================
+        isHeld = true;
 
-    private void StartFollowingHand()
-    {
-        if (rightHandAnchor == null)
+        if (rb != null)
         {
-            Debug.LogWarning("[Padlock] Falta rightHandAnchor.");
-            return;
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
 
-        // quitar highlight (volver a original)
-        SetHighlight(false, forceToOriginal: true);
+        if (col != null)
+            col.isTrigger = true; // para que no choque raro al acercarlo al receptor
 
-        // activar modo seguimiento (no parent)
-        isFollowing = true;
+        transform.SetParent(handAnchor);
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
     }
 
-    private bool CanPlaceNow()
+    private void DropToOriginal()
     {
-        if (placementPoint == null) return false;
+        isHeld = false;
 
-        // 1) Estoy apuntando al placement con el rayo de la mano
-        bool aiming = IsAimingPlacementByRay();
+        transform.SetParent(originalParent);
+        transform.localPosition = originalLocalPos;
+        transform.localRotation = originalLocalRot;
 
-        // 2) O estoy suficientemente cerca (seguridad por si falla el rayo)
-        float dist = Vector3.Distance(_tr.position, placementPoint.position);
-        bool near = dist <= snapDistance;
+        if (rb != null)
+            rb.isKinematic = false;
 
-        return aiming || near;
+        if (col != null)
+            col.isTrigger = false;
     }
 
-    private void PlaceOnPoint()
+    /// <summary>
+    /// Llamado desde el PadlockReceiver cuando el candado se encaja en el medio de los protectores.
+    /// </summary>
+    public void LockInPlace(Transform snapPoint)
     {
-        if (placementPoint == null)
-        {
-            Debug.LogWarning("[Padlock] Falta placementPoint.");
-            return;
-        }
+        isHeld = false;
+        isLockedInPlace = true;
 
-        // Fijar pose exacta y salir del modo seguimiento
-        _tr.position = placementPoint.position;
-        _tr.rotation = placementPoint.rotation;
+        transform.SetParent(snapPoint);
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
 
-        isFollowing = false;
+        if (rb != null)
+            rb.isKinematic = true;
+
+        if (col != null)
+            col.enabled = false; // ya no se usa como objeto físico
+
+        // opcional: quitar highlight
+        if (rend != null)
+            rend.material.color = originalColor;
     }
 
-    private bool IsAimingPlacementByRay()
+    public void OnSelect()
     {
-        if (placementPoint == null || rightHandAnchor == null) return false;
-
-        Vector3 origin = rightHandAnchor.position;
-        Vector3 dir = rightHandAnchor.forward;
-
-        if (Physics.Raycast(origin, dir, out RaycastHit hit, 5f, placementLayer, QueryTriggerInteraction.Collide))
-        {
-            return hit.transform == placementPoint || hit.transform.IsChildOf(placementPoint);
-        }
-        return false;
+        if (rend != null && !isLockedInPlace)
+            rend.material.color = highlightColor;
     }
 
-    // ---------- Highlight helpers (URP/Standard) ----------
-    private void SetHighlight(bool on, bool forceToOriginal = false)
+    public void OnDeselect()
     {
-        if (forceToOriginal)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], originalColors[i]);
-            isHighlighted = false; return;
-        }
-
-        if (on && !isHighlighted)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], highlightColor);
-            isHighlighted = true;
-        }
-        else if (!on && isHighlighted)
-        {
-            for (int i = 0; i < renderers.Length; i++) SetColor(renderers[i], originalColors[i]);
-            isHighlighted = false;
-        }
-    }
-
-    private static Color GetColor(Renderer r)
-    {
-        var m = r.material;
-        if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
-        if (m.HasProperty("_Color")) return m.GetColor("_Color");
-        return Color.white;
-    }
-
-    private static void SetColor(Renderer r, Color c)
-    {
-        var m = r.material;
-        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
-        else if (m.HasProperty("_Color")) m.SetColor("_Color", c);
+        if (rend != null && !isLockedInPlace)
+            rend.material.color = originalColor;
     }
 }

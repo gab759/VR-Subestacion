@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 using Assets.Scripts.GameEvents;
+using Meta.XR.ImmersiveDebugger.UserInterface.Generic;
 
 [System.Serializable]
 public class ChecklistItem
@@ -11,7 +12,7 @@ public class ChecklistItem
     public int orderIndex;
     public bool isCompleted = false;
     [HideInInspector] public GameObject itemUI;
-    [HideInInspector] public Image checkmarkImage;
+    [HideInInspector] public UnityEngine.UI.Image checkmarkImage;
     [HideInInspector] public TextMeshProUGUI itemText;
 }
 
@@ -25,7 +26,7 @@ public class CheckList : MonoBehaviour
     [SerializeField] private GameObject checklistPanel;
     [SerializeField] private GameObject itemPrefab;
     [SerializeField] private Transform itemContainer;
-    
+
     [Header("VR Settings")]
     [SerializeField] private bool isVRMode = true;
     [SerializeField] private Transform vrCamera;
@@ -34,21 +35,21 @@ public class CheckList : MonoBehaviour
     [SerializeField] private float followSpeed = 5f;
     [SerializeField] private bool alwaysVisible = true;
     [SerializeField] private float canvasScale = 0.001f;
-    
+
     [Header("Colors")]
     [SerializeField] private Color completedColor = Color.green;
     [SerializeField] private Color pendingColor = Color.gray;
     [SerializeField] private Color currentColor = Color.yellow;
-    
+
     [Header("Events")]
     [SerializeField] private GameEvent onChecklistCompleted;
     [SerializeField] private GameIntEvent onItemCompleted;
-    
+
     [Header("Audio (Optional)")]
     [SerializeField] private AudioClip completeSound;
     [SerializeField] private AudioClip checklistCompleteSound;
     private AudioSource audioSource;
-    
+
     private int currentItemIndex = 0;
     private bool isChecklistComplete = false;
 
@@ -57,7 +58,7 @@ public class CheckList : MonoBehaviour
         InitializeVRCanvas();
         InitializeChecklist();
         UpdateUI();
-        
+
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && (completeSound != null || checklistCompleteSound != null))
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -76,7 +77,31 @@ public class CheckList : MonoBehaviour
             UpdateVRPosition();
         }
     }
+    public bool AreAllItemsCompleted()
+    {
+        if (checklistItems == null || checklistItems.Count == 0)
+            return false;
 
+        foreach (var item in checklistItems)
+        {
+            if (!item.isCompleted)
+                return false;
+        }
+
+        return true;
+    }
+    
+    public void ResetChecklist()
+    {
+        foreach (var item in checklistItems)
+        {
+            item.isCompleted = false;
+        }
+
+        currentItemIndex = 0;
+        isChecklistComplete = false;
+        UpdateUI();
+    }
     private void InitializeVRCanvas()
     {
         // Buscar el canvas si no está asignado
@@ -189,7 +214,7 @@ public class CheckList : MonoBehaviour
             item.itemUI = itemObj;
             
             // Buscar componentes del item
-            item.checkmarkImage = itemObj.transform.Find("Checkmark")?.GetComponent<Image>();
+            item.checkmarkImage = itemObj.transform.Find("Checkmark")?.GetComponent<UnityEngine.UI.Image>();
             item.itemText = itemObj.GetComponentInChildren<TextMeshProUGUI>();
             
             // Si no encuentra con Find, buscar en hijos directos
@@ -337,14 +362,17 @@ public class CheckList : MonoBehaviour
 
     public bool IsItemCompleted(string itemName)
     {
+        if (string.IsNullOrEmpty(itemName) || checklistItems == null)
+            return false;
+
         foreach (var item in checklistItems)
         {
             if (item.itemName == itemName)
                 return item.isCompleted;
         }
+
         return false;
     }
-
     public string GetCurrentItemName()
     {
         if (currentItemIndex < checklistItems.Count)

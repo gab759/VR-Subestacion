@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - parte2
+  - Detector
   layers:
   - Default
   - TransparentFX

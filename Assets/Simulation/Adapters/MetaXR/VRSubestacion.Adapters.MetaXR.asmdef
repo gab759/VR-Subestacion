@@ -1,0 +1,26 @@
+{
+    "name": "VRSubestacion.Adapters.MetaXR",
+    "rootNamespace": "VRSubestacion.Adapters.MetaXR",
+    "references": [
+        "VRSubestacion.Simulation",
+        "VRSubestacion.Simulation.Integration",
+        "GUID:2a230cb87a1d3ba4a98bdc0ddae76e6c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VRSUB_META_ISDK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.meta.xr.sdk.interaction",
+            "expression": "81.0.0",
+            "define": "VRSUB_META_ISDK"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -80,52 +80,61 @@ namespace VRSubestacion.Simulation
 
         public void StartProcedure()
         {
-            _index = 0;
-            _started = true;
-
-            PublishProgress(ProcedureProgress.Started(_stepCount));
-
-            if (_stepCount > 0)
+            using (new SimulationSampleScope(SimulationProfilerMarkers.Start))
             {
-                _steps[0].OnEnter();
-                PublishStep(0, ProcedureStepState.Active);
-            }
-            else
-            {
-                PublishProgress(ProcedureProgress.Completed(_stepCount));
+                _index = 0;
+                _started = true;
+
+                PublishProgress(ProcedureProgress.Started(_stepCount));
+
+                if (_stepCount > 0)
+                {
+                    _steps[0].OnEnter();
+                    PublishStep(0, ProcedureStepState.Active);
+                }
+                else
+                {
+                    PublishProgress(ProcedureProgress.Completed(_stepCount));
+                }
             }
         }
 
         public void Tick(float deltaTime)
         {
-            if (!_started || IsComplete)
-                return;
+            using (new SimulationSampleScope(SimulationProfilerMarkers.Tick))
+            {
+                if (!_started || IsComplete)
+                    return;
 
-            _steps[_index].Tick(deltaTime);
+                _steps[_index].Tick(deltaTime);
+            }
         }
 
         void IInteractionSignalListener.OnSignal(in InteractionSignal signal)
         {
-            if (!_started || IsComplete)
-                return;
-
-            if (!_steps[_index].TryAdvance(in signal))
-                return;
-
-            _steps[_index].OnExit();
-            int completedIndex = _index;
-            _index++;
-
-            PublishStep(completedIndex, ProcedureStepState.Completed);
-
-            if (!IsComplete)
+            using (new SimulationSampleScope(SimulationProfilerMarkers.Signal))
             {
-                _steps[_index].OnEnter();
-                PublishStep(_index, ProcedureStepState.Active);
-            }
-            else
-            {
-                PublishProgress(ProcedureProgress.Completed(_stepCount));
+                if (!_started || IsComplete)
+                    return;
+
+                if (!_steps[_index].TryAdvance(in signal))
+                    return;
+
+                _steps[_index].OnExit();
+                int completedIndex = _index;
+                _index++;
+
+                PublishStep(completedIndex, ProcedureStepState.Completed);
+
+                if (!IsComplete)
+                {
+                    _steps[_index].OnEnter();
+                    PublishStep(_index, ProcedureStepState.Active);
+                }
+                else
+                {
+                    PublishProgress(ProcedureProgress.Completed(_stepCount));
+                }
             }
         }
 

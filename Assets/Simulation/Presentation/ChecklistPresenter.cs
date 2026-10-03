@@ -60,6 +60,30 @@ namespace VRSubestacion.Presentation
                 _core.Bind(channel);
         }
 
+        /// <summary>
+        /// Montaje por código (tests / prefabs generados). Reconstruye el core; asigna en heap.
+        /// </summary>
+        public void Configure(Row[] targetRows, TMP_Text targetProgressLabel, TMP_Text targetActiveStepLabel)
+        {
+            if (_core != null)
+            {
+                _core.Unbind();
+                _core = null;
+            }
+
+            rows = targetRows ?? Array.Empty<Row>();
+            progressLabel = targetProgressLabel;
+            activeStepLabel = targetActiveStepLabel;
+            _cachedTotal = -1;
+            _complete = false;
+
+            if (isActiveAndEnabled)
+            {
+                EnsureCore();
+                _core.Bind(progressChannel);
+            }
+        }
+
         private void Awake()
         {
             EnsureCore();

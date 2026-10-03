@@ -1,0 +1,26 @@
+{
+    "name": "VRSubestacion.Simulation.PlayModeTests",
+    "rootNamespace": "VRSubestacion.Simulation.PlayModeTests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "VRSubestacion.Simulation",
+        "VRSubestacion.Presentation",
+        "VRSubestacion.Simulation.Integration",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

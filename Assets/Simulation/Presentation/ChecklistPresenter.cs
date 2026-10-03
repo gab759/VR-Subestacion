@@ -41,6 +41,24 @@ namespace VRSubestacion.Presentation
         private bool _complete;
 
         public ChecklistPresenterCore Core => _core;
+        public ProcedureProgressChannel ProgressChannel => progressChannel;
+        public int RowCount => rows != null ? rows.Length : 0;
+
+        public Row GetRow(int index)
+        {
+            return rows[index];
+        }
+
+        /// <summary>
+        /// Inyección desde el orquestador. Si ya está activo, se re-suscribe al nuevo canal.
+        /// </summary>
+        public void SetChannel(ProcedureProgressChannel channel)
+        {
+            progressChannel = channel;
+
+            if (_core != null && isActiveAndEnabled)
+                _core.Bind(channel);
+        }
 
         private void Awake()
         {

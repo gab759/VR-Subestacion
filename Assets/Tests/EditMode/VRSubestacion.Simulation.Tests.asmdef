@@ -6,6 +6,8 @@
         "UnityEditor.TestRunner",
         "VRSubestacion.Simulation",
         "VRSubestacion.Presentation",
+        "VRSubestacion.Simulation.Integration",
+        "VRSubestacion.Editor",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

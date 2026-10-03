@@ -1,11 +1,14 @@
 {
-    "name": "VRSubestacion.Simulation.Integration",
-    "rootNamespace": "VRSubestacion.Simulation.Integration",
+    "name": "VRSubestacion.Editor",
+    "rootNamespace": "VRSubestacion.EditorTools",
     "references": [
         "VRSubestacion.Simulation",
+        "VRSubestacion.Simulation.Integration",
         "VRSubestacion.Presentation"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

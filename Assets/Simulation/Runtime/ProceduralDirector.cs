@@ -9,6 +9,7 @@ namespace VRSubestacion.Simulation
         private readonly ISimulationStep[] _steps;
         private readonly int _stepCount;
         private InteractionSignalChannel _channel;
+        private ProcedureProgressChannel _progress;
         private int _index;
         private bool _started;
 
@@ -69,13 +70,30 @@ namespace VRSubestacion.Simulation
             Bind(null);
         }
 
+        /// <summary>
+        /// Canal de salida opcional: la UI observa el progreso sin referenciar al director.
+        /// </summary>
+        public void BindProgress(ProcedureProgressChannel progress)
+        {
+            _progress = progress;
+        }
+
         public void StartProcedure()
         {
             _index = 0;
             _started = true;
 
+            PublishProgress(ProcedureProgress.Started(_stepCount));
+
             if (_stepCount > 0)
+            {
                 _steps[0].OnEnter();
+                PublishStep(0, ProcedureStepState.Active);
+            }
+            else
+            {
+                PublishProgress(ProcedureProgress.Completed(_stepCount));
+            }
         }
 
         public void Tick(float deltaTime)
@@ -95,10 +113,33 @@ namespace VRSubestacion.Simulation
                 return;
 
             _steps[_index].OnExit();
+            int completedIndex = _index;
             _index++;
 
+            PublishStep(completedIndex, ProcedureStepState.Completed);
+
             if (!IsComplete)
+            {
                 _steps[_index].OnEnter();
+                PublishStep(_index, ProcedureStepState.Active);
+            }
+            else
+            {
+                PublishProgress(ProcedureProgress.Completed(_stepCount));
+            }
+        }
+
+        private void PublishStep(int index, ProcedureStepState state)
+        {
+            int completed = state == ProcedureStepState.Completed ? index + 1 : index;
+            PublishProgress(ProcedureProgress.StepChanged(
+                _steps[index].StepId, index, state, completed, _stepCount));
+        }
+
+        private void PublishProgress(in ProcedureProgress progress)
+        {
+            if (_progress != null)
+                _progress.Raise(in progress);
         }
     }
 }

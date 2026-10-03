@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class HingedDoor : MonoBehaviour, IInteractable
+public class LeverSwitch : MonoBehaviour, IInteractable
 {
     [Header("Door Settings")]
     [Tooltip("Estado inicial de la puerta")]

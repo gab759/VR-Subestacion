@@ -4676,6 +4676,201 @@ MonoBehaviour:
   onBlocked:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &445204434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445204428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13950372069326343ac3c7b4c8e3d73a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pointable: {fileID: 445204435}
+  onPressed:
+    channel: {fileID: 11400000, guid: c4bebb60b3541ae4fad28fe82745ffa4, type: 2}
+    signals: 0300000012000000
+    payload: 0
+  onReleased:
+    channel: {fileID: 0}
+    signals: 
+    payload: 0
+--- !u!114 &445204435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445204428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317e663e2bb60ea408fe22b908b59295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 0}
+  _surfacePatch: {fileID: 445204436}
+  _enterHoverNormal: 0.15
+  _enterHoverTangent: 0
+  _exitHoverNormal: 0.2
+  _exitHoverTangent: 0
+  _cancelSelectNormal: 0.3
+  _cancelSelectTangent: 0.03
+  _minThresholds:
+    Enabled: 0
+    MinNormal: 0.01
+  _dragThresholds:
+    Enabled: 0
+    DragNormal: 0.01
+    DragTangent: 0.01
+    DragEaseCurve:
+      _animationCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      _animationLength: 0.05
+  _positionPinning:
+    Enabled: 1
+    MaxPinDistance: 0.075
+    PinningEaseCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0.2
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    ResyncCurve:
+      _animationCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      _animationLength: 0.2
+  _recoilAssist:
+    Enabled: 1
+    UseDynamicDecay: 1
+    DynamicDecayCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 50
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.9
+        value: 0.5
+        inSlope: -47
+        outSlope: -47
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    UseVelocityExpansion: 1
+    VelocityExpansionMinSpeed: 0.4
+    VelocityExpansionMaxSpeed: 1.4
+    VelocityExpansionDistance: 0.055
+    VelocityExpansionDecayRate: 0.125
+    ExitDistance: 0.02
+    ReEnterDistance: 0.02
+  _closeDistanceThreshold: 0.001
+  _tiebreakerScore: 0
+--- !u!114 &445204436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445204428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec226bf3cad457418d926296435ec78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _planeSurface: {fileID: 445204437}
+  _radius: 0.025012255
+--- !u!114 &445204437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445204428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cf2a74d69b1c1e41916d2a7afdff5be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _facing: 0
+  _doubleSided: 0
 --- !u!1 &446007410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7825482183620461930, guid: 294c9c7973efe584c99f85647831792c, type: 3}
@@ -11115,6 +11310,8 @@ MonoBehaviour:
   legacyObjects: []
   cleanBehaviours:
   - {fileID: 1546309199}
+  - {fileID: 1561851602}
+  - {fileID: 445204434}
   cleanObjects: []
 --- !u!4 &1146623916
 Transform:
@@ -14053,6 +14250,11 @@ GameObject:
   - component: {fileID: 1561851599}
   - component: {fileID: 1561851598}
   - component: {fileID: 1561851601}
+  - component: {fileID: 1561851604}
+  - component: {fileID: 1561851605}
+  - component: {fileID: 1561851603}
+  - component: {fileID: 1561851606}
+  - component: {fileID: 1561851602}
   m_Layer: 6
   m_Name: pCube31
   m_TagString: Untagged
@@ -14203,6 +14405,125 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.029051304, y: 0.049007773, z: 0.013411236}
   m_Center: {x: 0.00034320354, y: 0.0036621094, z: 0.0050968635}
+--- !u!114 &1561851602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561851595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a70da2bfc870eb4b872b6d132055a43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grabPointable: {fileID: 1561851603}
+  measuredTransform: {fileID: 1561851596}
+  localAxis: {x: 1, y: 0, z: 0}
+  onThresholdDegrees: 60
+  offThresholdDegrees: 20
+  onSwitchedOn:
+    channel: {fileID: 11400000, guid: c4bebb60b3541ae4fad28fe82745ffa4, type: 2}
+    signals: 01000000
+    payload: 0
+  onSwitchedOff:
+    channel: {fileID: 11400000, guid: c4bebb60b3541ae4fad28fe82745ffa4, type: 2}
+    signals: 10000000
+    payload: 0
+  gate: {fileID: 0}
+--- !u!114 &1561851603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561851595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _transferOnSecondSelection: 0
+  _addNewPointsToFront: 0
+  _forwardElement: {fileID: 0}
+  _oneGrabTransformer: {fileID: 1561851605}
+  _twoGrabTransformer: {fileID: 0}
+  _targetTransform: {fileID: 0}
+  _maxGrabPoints: 1
+  _rigidbody: {fileID: 1561851604}
+  _kinematicWhileSelected: 1
+  _throwWhenUnselected: 0
+--- !u!54 &1561851604
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561851595}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1561851605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561851595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 124f4583f657475469a45ab6fca8f921, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pivotTransform: {fileID: 0}
+  _rotationAxis: 0
+  _constraints:
+    MinAngle:
+      Constrain: 0
+      Value: 0
+    MaxAngle:
+      Constrain: 0
+      Value: 0
+--- !u!114 &1561851606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561851595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 1561851603}
+  _rigidbody: {fileID: 1561851604}
+  _grabSource: {fileID: 0}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 0}
 --- !u!1 &1565568675
 GameObject:
   m_ObjectHideFlags: 0
@@ -18945,6 +19266,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6099216887101930401, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 445204432}
+    - targetCorrespondingSourceObject: {fileID: 6099216887101930401, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 445204437}
+    - targetCorrespondingSourceObject: {fileID: 6099216887101930401, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 445204436}
+    - targetCorrespondingSourceObject: {fileID: 6099216887101930401, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 445204435}
+    - targetCorrespondingSourceObject: {fileID: 6099216887101930401, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 445204434}
     - targetCorrespondingSourceObject: {fileID: -3017865629583992493, guid: a8764ffaffabd4649841eb5b67d9e7a4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 165574549}
